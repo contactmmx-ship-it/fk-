@@ -25,13 +25,18 @@ export default function App() {
   const [aiDiagnostic, setAiDiagnostic] = useState<{ active: boolean; key_detected: boolean } | null>(null);
 
   useEffect(() => {
-    const checkAI = async () => {
+    const fetchAIDiagnostic = async () => {
       try {
         const res = await fetch("/api/debug/ai");
-        if (res.ok) setAiDiagnostic(await res.json());
-      } catch (err) {}
+        if (res.ok) {
+          const data = await res.json();
+          setAiDiagnostic(data);
+        }
+      } catch (err) {
+        console.error("AI Diagnostic fetch failed:", err);
+      }
     };
-    checkAI();
+    fetchAIDiagnostic();
   }, [currentUser]);
 
   // Live Database State
@@ -181,20 +186,6 @@ export default function App() {
   }
 
   // --- API STATE TRANSACTION WRAPPER CALLS ---
-
-  const [aiStatus, setAiStatus] = useState<{ detected: boolean; model: string }>({ detected: false, model: "Unknown" });
-
-  useEffect(() => {
-    const checkAI = async () => {
-      try {
-        const res = await fetch("/api/db");
-        if (res.ok) {
-           // We can check if messages contain an offline warning
-        }
-      } catch (err) {}
-    };
-    checkAI();
-  }, []);
 
   // Refreshes the database state after an update
   const refreshState = async () => {
@@ -617,7 +608,7 @@ export default function App() {
             
             {/* Message thread */}
             <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
-              {db.messages.map((m) => (
+              {db && db.messages && db.messages.map((m) => (
                 <div key={m.id} className={`flex gap-2.5 items-start ${m.sender === "user" ? "flex-row-reverse" : ""}`}>
                   <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-serif font-bold ${
                     m.sender === "ai" ? "bg-[rgba(201,168,76,0.15)] text-[#C9A84C] border border-[rgba(201,168,76,0.25)]" : "bg-[rgba(15,24,40,0.8)] text-[rgba(240,239,232,0.55)] border border-[rgba(201,168,76,0.06)]"
