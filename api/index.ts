@@ -31,14 +31,7 @@ let ai: GoogleGenAI | null = null;
 try {
     const apiKey = process.env.GEMINI_API_KEY;
     if (apiKey && apiKey !== "MY_GEMINI_API_KEY") {
-        ai = new GoogleGenAI({
-            apiKey,
-            httpOptions: {
-                headers: {
-                    "User-Agent": "aistudio-build",
-                },
-            },
-        });
+        ai = new GoogleGenAI(apiKey);
     }
 } catch (err) {
     console.error("AI Init failed:", err);
@@ -99,18 +92,18 @@ app.post("/api/chat", requireAuth, async (req: AuthenticatedRequest, res) => {
     if (!cloudMemory[userId]) cloudMemory[userId] = [];
     cloudMemory[userId].push(userMsg);
 
-    let answerText = "AI is currently offline. Please check your GEMINI_API_KEY in environment variables.";
+    // UNIQUE VERIFICATION STRING TO DETECT DEPLOYMENT SUCCESS
+    let answerText = "[VERIFIED V3] AI Engine Offline. Add your GEMINI_API_KEY to Vercel Environment Variables.";
 
     if (ai) {
         try {
-            const responseObj = await ai.models.generateContent({
-                model: "gemini-1.5-flash",
-                contents: prompt,
-            });
-            answerText = responseObj.text || "I am analyzing the data. Please rephrase.";
+            const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
+            const result = await model.generateContent(`You are the FK Chairman Partner. High-level strategy only. Target 1100Cr. Chairman says: ${prompt}`);
+            const response = await result.response;
+            answerText = response.text() || "I am analyzing the data. Please rephrase.";
         } catch (err: any) {
             console.error("Gemini call failed:", err);
-            answerText = `Operational Alert: ${err.message || "Connection error"}. Verify API key and network.`;
+            answerText = `[VERIFIED V3] Operational Alert: ${err.message || "Connection error"}. Verify API key and network.`;
         }
     }
 
