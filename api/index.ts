@@ -11,7 +11,6 @@ import dotenv from "dotenv";
 
 import {
   getCombinedDatabaseState,
-  dbWriteOperation,
   findUserByEmail,
 } from "../server/db.js";
 
@@ -26,7 +25,6 @@ app.use(express.json());
 app.use(cookieParser());
 app.set("trust proxy", 1);
 
-// --- CLOUD MEMORY FALLBACK ---
 const cloudMemory: any = {};
 
 let ai: GoogleGenAI | null = null;
@@ -101,20 +99,18 @@ app.post("/api/chat", requireAuth, async (req: AuthenticatedRequest, res) => {
     if (!cloudMemory[userId]) cloudMemory[userId] = [];
     cloudMemory[userId].push(userMsg);
 
-    let answerText = "AI is currently offline. Please check your GEMINI_API_KEY configuration.";
+    let answerText = "AI is currently offline. Please check your GEMINI_API_KEY in environment variables.";
 
     if (ai) {
         try {
-            // Using the models.generateContent API which matches the library version
-            const responseObj = await (ai as any).models.generateContent({
+            const responseObj = await ai.models.generateContent({
                 model: "gemini-1.5-flash",
-                contents: [{ role: "user", parts: [{ text: `You are the FK Chairman Partner. High-level strategy only. Target 1100Cr. Chairman says: ${prompt}` }] }]
+                contents: prompt,
             });
-
-            answerText = responseObj.text || responseObj.response?.text?.() || "I am analyzing the data. Please rephrase.";
+            answerText = responseObj.text || "I am analyzing the data. Please rephrase.";
         } catch (err: any) {
             console.error("Gemini call failed:", err);
-            answerText = `Operational Alert: ${err.message || "Calibration timeout"}. Attempting to re-establish neural link.`;
+            answerText = `Operational Alert: ${err.message || "Connection error"}. Verify API key and network.`;
         }
     }
 

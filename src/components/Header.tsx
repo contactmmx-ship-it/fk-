@@ -6,9 +6,10 @@ interface HeaderProps {
   executiveScore: number;
   currentUser: { email: string; role: string } | null;
   onLogout: () => void;
+  aiDiagnostic?: { active: boolean; key_detected: boolean } | null;
 }
 
-export default function Header({ activePath, onNavigate, executiveScore, currentUser, onLogout }: HeaderProps) {
+export default function Header({ activePath, onNavigate, executiveScore, currentUser, onLogout, aiDiagnostic }: HeaderProps) {
   const routes = [
     { path: "/command-center", label: "Command Center" },
     { path: "/weekly-board", label: "Weekly Board" },
@@ -65,7 +66,13 @@ export default function Header({ activePath, onNavigate, executiveScore, current
         </div>
         <div className="flex items-center gap-2">
           <div className="text-[10px] font-mono text-[rgba(240,239,232,0.5)]">EXEC: <span className="text-[#C9A84C] font-bold">{executiveScore}</span></div>
-          <div className="w-2 h-2 rounded-full bg-[#1D9E75] shadow-[0_0_6px_#1D9E75] animate-pulse"></div>
+          {aiDiagnostic && (
+            <div
+                className={`w-2 h-2 rounded-full shadow-[0_0_6px] ${aiDiagnostic.key_detected ? "bg-green-500 shadow-green-500" : "bg-red-500 shadow-red-500 animate-pulse"}`}
+                title={aiDiagnostic.key_detected ? "AI Engine Online" : "AI Engine Offline - Missing API Key"}
+            />
+          )}
+          {!aiDiagnostic && <div className="w-2 h-2 rounded-full bg-[#1D9E75] shadow-[0_0_6px_#1D9E75] animate-pulse" />}
         </div>
       </div>
     </header>

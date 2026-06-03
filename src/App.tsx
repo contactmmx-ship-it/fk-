@@ -22,6 +22,17 @@ export default function App() {
 
   // User State
   const [currentUser, setCurrentUser] = useState<{ id: number; email: string; role: string } | null>(null);
+  const [aiDiagnostic, setAiDiagnostic] = useState<{ active: boolean; key_detected: boolean } | null>(null);
+
+  useEffect(() => {
+    const checkAI = async () => {
+      try {
+        const res = await fetch("/api/debug/ai");
+        if (res.ok) setAiDiagnostic(await res.json());
+      } catch (err) {}
+    };
+    checkAI();
+  }, [currentUser]);
 
   // Live Database State
   const [db, setDb] = useState<DatabaseState | null>(null);
@@ -170,6 +181,20 @@ export default function App() {
   }
 
   // --- API STATE TRANSACTION WRAPPER CALLS ---
+
+  const [aiStatus, setAiStatus] = useState<{ detected: boolean; model: string }>({ detected: false, model: "Unknown" });
+
+  useEffect(() => {
+    const checkAI = async () => {
+      try {
+        const res = await fetch("/api/db");
+        if (res.ok) {
+           // We can check if messages contain an offline warning
+        }
+      } catch (err) {}
+    };
+    checkAI();
+  }, []);
 
   // Refreshes the database state after an update
   const refreshState = async () => {
@@ -379,6 +404,7 @@ export default function App() {
         executiveScore={db.partnerScore.overallScore}
         currentUser={currentUser}
         onLogout={handleLogout}
+        aiDiagnostic={aiDiagnostic}
       />
 
       {/* Main double split frame layout */}
