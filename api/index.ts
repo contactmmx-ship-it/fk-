@@ -1,0 +1,127 @@
+import express from "express";
+import path from "path";
+import fs from "fs";
+import cookieParser from "cookie-parser";
+import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
+import cors from "cors";
+import helmet from "helmet";
+import { GoogleGenAI } from "@google/genai";
+import dotenv from "dotenv";
+
+import {
+  getCombinedDatabaseState,
+  dbWriteOperation,
+  findUserByEmail,
+} from "../server/db.js";
+
+dotenv.config();
+
+const app = express();
+const JWT_SECRET = process.env.JWT_SECRET || "fk_group_secret_session_layer_2026";
+
+app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }));
+app.use(cors({ origin: true, credentials: true }));
+app.use(express.json());
+app.use(cookieParser());
+app.set("trust proxy", 1);
+
+// --- CLOUD MEMORY FALLBACK ---
+const cloudMemory: any = {};
+
+let ai: GoogleGenAI | null = null;
+try {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (apiKey && apiKey !== "MY_GEMINI_API_KEY") {
+        ai = new GoogleGenAI({
+            apiKey,
+            httpOptions: {
+                headers: {
+                    "User-Agent": "aistudio-build",
+                },
+            },
+        });
+    }
+} catch (err) {
+    console.error("AI Init failed:", err);
+}
+
+// Auth Middleware
+interface AuthenticatedRequest extends express.Request {
+  user?: { id: number; email: string; role: string };
+}
+const requireAuth = async (req: AuthenticatedRequest, res: express.Response, next: express.NextFunction) => {
+  try {
+    const token = req.cookies.token;
+    if (!token) return res.status(401).json({ error: "Authentication required" });
+    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    req.user = decoded;
+    next();
+  } catch (error) {
+    res.status(401).json({ error: "Invalid session" });
+  }
+};
+
+app.post("/api/auth/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const user = await findUserByEmail(email);
+    if (!user || !(await bcrypt.compare(password, user.password_hash))) {
+      return res.status(401).json({ error: "Invalid email or password" });
+    }
+    const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: "24h" });
+    res.cookie("token", token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "none",
+        maxAge: 24 * 60 * 60 * 1000
+    });
+    res.json({ status: "success", user: { id: user.id, email: user.email, role: user.role } });
+  } catch (err) {
+    res.status(500).json({ error: "Login failed" });
+  }
+});
+
+app.get("/api/auth/me", requireAuth, (req: AuthenticatedRequest, res) => res.json({ user: req.user }));
+
+app.get("/api/db", requireAuth, async (req: AuthenticatedRequest, res) => {
+  const userId = req.user!.id;
+  const data = await getCombinedDatabaseState(userId);
+  if (cloudMemory[userId]) {
+    data.messages = [...data.messages, ...cloudMemory[userId]];
+  }
+  res.json(data);
+});
+
+app.post("/api/chat", requireAuth, async (req: AuthenticatedRequest, res) => {
+    const { prompt } = req.body;
+    const userId = req.user!.id;
+
+    const userMsg = { id: "msg-" + Date.now(), sender: "user", text: prompt, timestamp: new Date().toISOString() };
+    if (!cloudMemory[userId]) cloudMemory[userId] = [];
+    cloudMemory[userId].push(userMsg);
+
+    let answerText = "AI is currently offline. Please check your GEMINI_API_KEY configuration.";
+
+    if (ai) {
+        try {
+            // Using the models.generateContent API which matches the library version
+            const responseObj = await (ai as any).models.generateContent({
+                model: "gemini-1.5-flash",
+                contents: [{ role: "user", parts: [{ text: `You are the FK Chairman Partner. High-level strategy only. Target 1100Cr. Chairman says: ${prompt}` }] }]
+            });
+
+            answerText = responseObj.text || responseObj.response?.text?.() || "I am analyzing the data. Please rephrase.";
+        } catch (err: any) {
+            console.error("Gemini call failed:", err);
+            answerText = `Operational Alert: ${err.message || "Calibration timeout"}. Attempting to re-establish neural link.`;
+        }
+    }
+
+    const aiMsg = { id: "msg-ai-" + Date.now(), sender: "ai", text: answerText, timestamp: new Date().toISOString() };
+    cloudMemory[userId].push(aiMsg);
+
+    res.json({ aiMessage: aiMsg });
+});
+
+export default app;

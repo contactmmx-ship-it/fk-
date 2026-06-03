@@ -1,0 +1,70 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=DM+Mono:wght@300;400&family=Outfit:wght@200;300;400;500;600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "DM Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+:root {
+  --navy: #05080F;
+  --navy2: #0A1020;
+  --navy3: #0F1828;
+  --gold: #C9A84C;
+  --gold2: #E8C878;
+  --gold3: #F5E0A0;
+  --white: #F0EFE8;
+  --white-dim: rgba(240,239,232,0.6);
+  --white-muted: rgba(240,239,232,0.35);
+  --red: #E24B4A;
+  --green: #1D9E75;
+  --amber: #EF9F27;
+  --text-primary: #F0EFE8;
+  --text-sec: rgba(240,239,232,0.65);
+  --text-muted: rgba(240,239,232,0.38);
+  --border: rgba(201,168,76,0.18);
+  --radius: 12px;
+}
+
+body {
+  background: #06090F;
+  color: var(--text-primary);
+  font-family: 'Outfit', sans-serif;
+  font-weight: 300;
+  font-size: 14px;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* Cormorant Garamond Serif Accent Styling */
+.font-serif-cormorant {
+  font-family: 'Cormorant Garamond', serif;
+}
+
+/* Custom styles for high-fidelity luxury components */
+.border-gold-glow {
+  border: 0.5px solid rgba(201,168,76,0.3);
+  box-shadow: 0 0 12px rgba(201,168,76,0.06);
+}
+
+.border-red-glow {
+  border: 0.5px solid rgba(226,75,74,0.35);
+  box-shadow: 0 0 12px rgba(226,75,74,0.06);
+}
+
+.nav-active {
+  color: var(--gold);
+  border-bottom: 2px solid var(--gold);
+}
+
+/* Scrollbar rules */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 2px;
+}

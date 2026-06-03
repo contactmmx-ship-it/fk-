@@ -1,0 +1,455 @@
+{
+  "credentials": null,
+  "weeklyBoardItems": [
+    {
+      "id": "wb-1",
+      "category": "win",
+      "title": "Chaat Masters MRR hit ₹12.1L",
+      "description": "Expansion trigger officially met. 8-week sustained performance confirmed. Ready for Pune expansion gate."
+    },
+    {
+      "id": "wb-2",
+      "category": "win",
+      "title": "Two new FOCO outlets onboarded",
+      "description": "Outlet #15 and #16 live. Both performing above target in week 1. Strong franchise partner execution."
+    },
+    {
+      "id": "wb-3",
+      "category": "win",
+      "title": "Dinesh Mehta investor call (positive momentum)",
+      "description": "Very warm signal. 90% probability on commitment. Close should happen within 2 weeks."
+    },
+    {
+      "id": "wb-4",
+      "category": "fail",
+      "title": "Arvind Capital investor deck",
+      "description": "Committed 4 weeks ago. Postponed 4 times. Still not sent. This is blocking Round B close and costing leverage."
+    },
+    {
+      "id": "wb-5",
+      "category": "fail",
+      "title": "COO shortlist approval",
+      "description": "Overdue 3 days. Legal and finance teams waiting. Impacts hiring sequencing for Q3."
+    },
+    {
+      "id": "wb-6",
+      "category": "fail",
+      "title": "FOCO Outlet #14 cash review",
+      "description": "Third consecutive week skipped. Cash burn continues. Needs franchisee escalation or write-off decision by EOW."
+    },
+    {
+      "id": "wb-7",
+      "category": "risk",
+      "title": "Cash runway pressure",
+      "description": "Currently 7.2 months. Every week of investor close delay costs ₹40L in valuation leverage."
+    },
+    {
+      "id": "wb-8",
+      "category": "risk",
+      "title": "Investor funnel cooling",
+      "description": "2 conversations went cold this week (were warm). Catalyst Fund needs re-engagement immediately."
+    },
+    {
+      "id": "wb-9",
+      "category": "team",
+      "title": "GM: Outlet operations solid",
+      "description": "Strong execution on new outlets. But operations/ops role split is creating confusion. Need clarity on responsibilities."
+    },
+    {
+      "id": "wb-10",
+      "category": "team",
+      "title": "Finance: Cash tracking excellent",
+      "description": "Weekly forecasts accurate. P&L analysis solid. Ready for CFO-level work post-growth."
+    }
+  ],
+  "weeklyBoardMetrics": {
+    "juneTargetVsActual": -17,
+    "accountabilityScore": 48,
+    "weeklyTrend": "down",
+    "mrrTargetGap": "Gap: ₹6.6L MRR | Investor delay impact"
+  },
+  "actionPlanItems": [
+    {
+      "id": "ap-1",
+      "day": "Monday",
+      "title": "Send Arvind Capital deck + schedule follow-up call",
+      "description": "Non-negotiable. This must happen today EOD. Will unlock momentum.",
+      "completed": false
+    },
+    {
+      "id": "ap-2",
+      "day": "Tuesday",
+      "title": "FOCO Outlet #14 escalation call with franchisee",
+      "description": "Diagnose root cause. Decide: fix with support plan, or write off by Friday.",
+      "completed": false
+    },
+    {
+      "id": "ap-3",
+      "day": "Wednesday",
+      "title": "Approve Acquisition LOI #1 + COO shortlist",
+      "description": "Clear blockers. Unlock legal + hiring processes. Move momentum forward.",
+      "completed": false
+    }
+  ],
+  "emergencyMode": {
+    "isActivated": true,
+    "activatedAt": "2026-06-02T07:02:14Z",
+    "reason": "Multiple KPIs have crossed critical thresholds. This is a 72-hour recovery window. Everything else is secondary.",
+    "criticalKpis": {
+      "runwayMonths": 6.1,
+      "revenueGapPct": -12,
+      "investorFunnelCount": 2
+    },
+    "recoveryPlan": [
+      {
+        "phase": "HOUR 0-24 (Monday-Tuesday)",
+        "hours": "0-24",
+        "tasks": [
+          "Send Arvind Capital deck + schedule call (Mon EOD)",
+          "Emergency call with FOCO #14 franchisee (Tue AM)",
+          "Approve Acquisition LOI #1 (Tue PM)"
+        ]
+      },
+      {
+        "phase": "HOUR 24-48 (Tuesday-Wednesday)",
+        "hours": "24-48",
+        "tasks": [
+          "Dinesh Mehta investor call (re-confirm close)",
+          "FOCO #14 decision: fix with support plan or write off",
+          "Communicate timeline to board and team"
+        ]
+      },
+      {
+        "phase": "HOUR 48-72 (Wednesday-Thursday)",
+        "hours": "48-72",
+        "tasks": [
+          "Mid-week board review (assess recovery progress)",
+          "Lock Q3 hiring plan (give team clarity and confidence)",
+          "Identify and retain any at-risk team departures"
+        ]
+      }
+    ],
+    "actionsToTake": [
+      {
+        "text": "Block 12 hours for investor work this week",
+        "isDo": true
+      },
+      {
+        "text": "Make FOCO #14 decision by Wednesday EOD",
+        "isDo": true
+      },
+      {
+        "text": "Delegate all operations to GM immediately",
+        "isDo": true
+      },
+      {
+        "text": "Pause new initiatives until cash is secure",
+        "isDo": true
+      },
+      {
+        "text": "Do NOT take on new projects this week",
+        "isDo": false
+      },
+      {
+        "text": "Do NOT approve new hires (except critical)",
+        "isDo": false
+      },
+      {
+        "text": "Do NOT travel or take time off",
+        "isDo": false
+      }
+    ],
+    "rootCauseAnalysis": {
+      "primary": "Investor close delay is compounding all three KPI failures. The cascade is: investor anxiety → procrastination → deck not sent → valuation leverage lost → cash runway pressure → team uncertainty → execution slowdown.",
+      "secondary": "FOCO outlet #14 cash burn continues unchecked. Acquisition LOI blocker creating team stall.",
+      "tertiary": "Operations work consuming time that should be reserved for investor conversations.",
+      "systemFix": "After you exit Emergency Mode, implement 'Investor Tuesday/Thursday' — 2-hour blocks on these days that nothing can preempt. This prevents the procrastination → cascade → emergency cycle."
+    }
+  },
+  "accountabilityCommitments": [
+    {
+      "id": "c-1",
+      "title": "Arvind Capital investor deck",
+      "status": "overdue",
+      "committedDaysOverdue": 9,
+      "committedDate": "May 28",
+      "dueDate": "May 31",
+      "impact": "Breaking Round B close. Every week of delay costs ₹40L in valuation leverage."
+    },
+    {
+      "id": "c-2",
+      "title": "COO shortlist approval",
+      "status": "overdue",
+      "committedDaysOverdue": 3,
+      "committedDate": "May 30",
+      "dueDate": "June 5",
+      "impact": "4 candidates waiting. Legal team blocked on hiring process. Cascades into Q3 organizational plan."
+    },
+    {
+      "id": "c-3",
+      "title": "Acquisition LOI #1 final approval",
+      "status": "due-soon",
+      "committedDaysOverdue": 2,
+      "committedDate": "June 1",
+      "dueDate": "June 6",
+      "impact": "Legal needs your final input. Deal window closes this week."
+    },
+    {
+      "id": "c-4",
+      "title": "FOCO Outlet #14 cash burn resolution",
+      "status": "due-soon",
+      "committedDaysOverdue": 21,
+      "committedDate": "May 12",
+      "dueDate": "May 20",
+      "impact": "Consuming 8 hrs/week of your time in crisis management. Needs fix-or-fold decision by Wednesday."
+    }
+  ],
+  "decisionLogItems": [
+    {
+      "id": "dl-1",
+      "title": "Expansion to Pune — Go or No-Go",
+      "date": "June 2, 2026",
+      "context": "Chaat Masters MRR hit ₹12.1L (expansion trigger). FOCO model stable. Brand NPS 8.2. Question: Should we expand to Pune in Q3?",
+      "outcome": "Decision: YES, proceed with franchise-led model. Identify 3 franchisee partners by June 15. Announcement by June 30. Capital protected through franchise model, not company-owned outlets.",
+      "status": "successful"
+    },
+    {
+      "id": "dl-2",
+      "title": "FOCO Outlet #14 — Fix or Fold",
+      "date": "June 5, 2026 (pending)",
+      "context": "Outlet #14 in cash burn for 3 weeks. Question: Do we fix this outlet with a support plan, or write it off and reallocate capital?",
+      "outcome": "Pending decision. Emergency call with franchisee scheduled for June 5. Based on conversation, decide on support plan or exit by June 6 EOD.",
+      "status": "in-progress"
+    },
+    {
+      "id": "dl-3",
+      "title": "Acquisition Target #1 — LOI Approval",
+      "date": "June 6, 2026 (pending)",
+      "context": "Due diligence complete. Legal draft ready. Question: Do we move forward with LOI signature, or pass on this target?",
+      "outcome": "Pending your final approval. Strategic fit strong, financials solid, timing good (post-investor close). Expect to approve by EOD June 6.",
+      "status": "in-progress"
+    },
+    {
+      "id": "dl-4",
+      "title": "Hire COO — Role & Sequencing",
+      "date": "May 30, 2026",
+      "context": "Operations complexity growing. Team gap obvious. Question: When do we hire a COO, and what profile do we need?",
+      "outcome": "Decision: Hire immediately. Profile: franchise operations background, former partner at scaling company, ready to own all outlet operations and team. Shortlist 3 candidates by June 10.",
+      "status": "successful"
+    },
+    {
+      "id": "dl-5",
+      "title": "Investor Round B — Close Timing",
+      "date": "May 15, 2026",
+      "context": "Dinesh Mehta is warm. Catalyst cooling. Arvind deck pending. Question: What's the realistic close timeline for Round B?",
+      "outcome": "Decision: Target 3-week close (by June 20). Dinesh + Arvind both viable. Catalyst needs re-engagement. Send all decks by June 7. Lock timelines with each by June 10.",
+      "status": "successful"
+    }
+  ],
+  "messages": [
+    {
+      "id": "msg-1",
+      "sender": "ai",
+      "text": "Rajeev, one thing before you start: last Monday you committed to sending the FOCO expansion deck to two shortlisted investors. As of now, only one has been sent. The second has been pushed 4 times. I need you to action this before 11 AM today.",
+      "timestamp": "2026-06-02T07:02:14Z"
+    }
+  ],
+  "qrPassport": {
+    "partnerId": "8234-92A",
+    "partnerName": "Rajeev Kumar",
+    "roles": [
+      "FK Holdings Chairman",
+      "Active Franchise Architect",
+      "Ecosystem Owner"
+    ],
+    "verificationDate": "Tuesday, June 02, 2026",
+    "scoreHistory": [
+      68,
+      70,
+      75,
+      72,
+      74
+    ],
+    "verifiedLicenses": [
+      "Mr. Chick'n Master Charter",
+      "Chaat Masters Pro Developer License",
+      "Acquisition Syndicate Lead Authority"
+    ],
+    "securityCode": "FK-SEC-84X-VERIFIED-2026"
+  },
+  "partnerScore": {
+    "overallScore": 72,
+    "trend": "neutral",
+    "metrics": {
+      "revenueMRR": 3140000,
+      "cashRunwayMonths": 7.2,
+      "focoOutletsCount": 17,
+      "investorFunnelWarmCount": 3,
+      "appMRR": 1210000,
+      "executiveScore": 72
+    }
+  },
+  "ceoBriefings": [
+    {
+      "date": "Monday, June 02, 2026",
+      "todayMission": "Close Investor Round B conversations. Two calls cannot slip again.",
+      "biggestRisk": "FOCO outlet #14 cash burn — 3rd week without resolution. Escalate now.",
+      "biggestOpportunity": "Chaat Masters app MRR crossed ₹12L last week. Expansion trigger met.",
+      "whatToIgnore": "Operations detail meetings. Delegate to GM. Stay chairman-level only.",
+      "topActions": [
+        {
+          "id": "ta-1",
+          "text": "Investor call — Dinesh Mehta (9:30 AM)",
+          "expectedImpact": "Warm commitment close within 2 weeks at favorable terms."
+        },
+        {
+          "id": "ta-2",
+          "text": "Review Chaat Masters expansion Pune gating",
+          "expectedImpact": "Activate franchise model and screen 3 franchise candidates."
+        },
+        {
+          "id": "ta-3",
+          "text": "Approve acquisition LOI — Target #3",
+          "expectedImpact": "Lock down logistics target under due diligence."
+        }
+      ]
+    }
+  ],
+  "warRoomSessions": [
+    {
+      "sessionId": "wrs-1",
+      "createdAt": "2026-06-02T07:02:00Z",
+      "status": "active",
+      "title": "Operation Round B Ingress",
+      "battlePlan": [
+        "Deliver revised deck directly to Arvind Capital partner via strategic introduction",
+        "Set firm Tuesday deadline for Catalyst Fund counter-proposal",
+        "Sequence Dinesh Mehta closed round to trigger FOMO on remaining syndicate allocation"
+      ],
+      "adversaries": [
+        "Competitor QSR pricing pressure in Gurgaon",
+        "Extended banking clearance loops for SPV integration"
+      ],
+      "allies": [
+        "Dinesh Mehta Strategic Round Syndicate",
+        "FK Business OS integration leads"
+      ],
+      "advisorLogs": [
+        "AI Chairman Advisor: Priority remains protecting runway while maintaining 100% IP control. Do not accept minority dilutions under 25."
+      ]
+    }
+  ],
+  "investors": [
+    {
+      "id": "inv-1",
+      "name": "Dinesh Mehta",
+      "email": "dinesh.m@mehtaholdings.com",
+      "contact": "+91 98110 52342",
+      "ticketSizeRs": 7500000,
+      "stage": "committed",
+      "spvAllocated": "SPV 15 & 16",
+      "lastContacted": "2026-06-01",
+      "notes": "90% probability on Round B lead syndicate. Wants board observer seat."
+    },
+    {
+      "id": "inv-2",
+      "name": "Arvind Capital partners",
+      "email": "contact@arvindcap.in",
+      "contact": "+91 22 4902 3321",
+      "ticketSizeRs": 12000000,
+      "stage": "due-diligence",
+      "spvAllocated": "Pending Deck",
+      "lastContacted": "2026-05-28",
+      "notes": "Postponed meetings 4 times. Waiting for core expansion model deck."
+    },
+    {
+      "id": "inv-3",
+      "name": "Catalyst Fund India",
+      "email": "investment@catalystfund.in",
+      "contact": "+91 80 5021 9901",
+      "stage": "warm",
+      "ticketSizeRs": 5000000,
+      "spvAllocated": "SPV 17",
+      "lastContacted": "2026-05-25",
+      "notes": "Wary of cash runway duration. Re-engage immediately with updated Q1 metrics."
+    }
+  ],
+  "brands": [
+    {
+      "id": "b-1",
+      "name": "Mr. Chick'n",
+      "type": "QSR",
+      "outletsCountTarget": 186,
+      "outletsCountActual": 10,
+      "appUsersTarget": 50000,
+      "appUsersActual": 2000,
+      "commissionPct": 6,
+      "mrrActual": 1930000,
+      "isTriggerMet": true
+    },
+    {
+      "id": "b-2",
+      "name": "Chaat Masters",
+      "type": "QSR",
+      "outletsCountTarget": 168,
+      "outletsCountActual": 7,
+      "appUsersTarget": 50000,
+      "appUsersActual": 15100,
+      "commissionPct": 6,
+      "mrrActual": 1210000,
+      "isTriggerMet": true
+    }
+  ],
+  "readinessScans": [
+    {
+      "id": "sc-1",
+      "cityName": "Pune",
+      "tier": 1,
+      "mrrConditionMet": true,
+      "focoModelStable": true,
+      "npsScore": 8.2,
+      "readyToDeploy": true,
+      "recommendations": [
+        "Shortlist 3 franchise candidates within 14 days",
+        "Protect EBITDA runway by employing franchise-funded real-estate model",
+        "Deploy basic FK Business OS to local operations before soft launch"
+      ]
+    },
+    {
+      "id": "sc-2",
+      "cityName": "Jaipur",
+      "tier": 2,
+      "mrrConditionMet": true,
+      "focoModelStable": false,
+      "npsScore": 7.9,
+      "readyToDeploy": false,
+      "recommendations": [
+        "Resolve outstanding manager role confusion before adding assets",
+        "Establish standardized cash-gating benchmarks for local partners"
+      ]
+    }
+  ],
+  "knowledgeDocs": [
+    {
+      "id": "kd-1",
+      "title": "FK ₹1,100 Crore Plan Blueprint Summary",
+      "category": "Volume 1",
+      "summary": "Overview of the primary milestones, targets, and model breakdown.",
+      "content": "FK Plan targets ₹1,100 Crore annual group ecosystem revenue by September 2030. Sourced from: 400 FOCO outlets (₹480 Cr), 8 acquired businesses (₹400 Cr), and apps ecosystem of 100,000 paid users (₹200 Cr). FK direct revenue retention target is 159 Cr/year."
+    },
+    {
+      "id": "kd-2",
+      "title": "The Ownership Rule",
+      "category": "Rule",
+      "summary": "Strategic constraints governing all standard commercial relationship gates.",
+      "content": "RULE: Every new relationship = FK gets at least ONE of: 20%+ equity, perpetual revenue share, master franchise rights (5+ years), or full IP ownership. Consulting without ownership is strictly prohibited."
+    },
+    {
+      "id": "kd-3",
+      "title": "FOCO Expansion SPV Mechanics",
+      "category": "SOP",
+      "summary": "Structuring and investor metrics for building 400 outlets.",
+      "content": "SOP: Each outlet is pooled inside a distinct asset shell Special Purpose Vehicle (SPV) with 4 key investors placing ₹7.5L each (Total ₹30L). Brand operates, FK collects 6% fee directly, retains 25% for platform operating cash, and distributes 75% back to SPV investors monthly. Expected ROI is 18-22%."
+    }
+  ]
+}

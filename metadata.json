@@ -1,0 +1,6 @@
+{
+  "name": "FK Chairman Partner OS",
+  "description": "Premium Executive Dashboard and Operating System for FK Holdings Chairman (Rajeev) utilizing advanced AI-powered systems.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
