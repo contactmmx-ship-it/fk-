@@ -610,8 +610,9 @@ export default function App() {
 
           {/* Continuous Chat Assistant Section */}
           <div className="bg-[rgba(10,16,30,0.6)] border border-[rgba(201,168,76,0.18)] rounded-lg flex-1 min-h-[350px] flex flex-col overflow-hidden">
-            <div className="px-4 py-2 border-b border-[rgba(201,168,76,0.1)] text-[10px] font-mono uppercase tracking-widest text-[rgba(240,239,232,0.55)]">
-              AI Chairman Advisor Chat
+            <div className="px-4 py-2 border-b border-[rgba(201,168,76,0.1)] text-[10px] font-mono uppercase tracking-widest text-[rgba(240,239,232,0.55)] flex justify-between">
+              <span>AI Chairman Advisor Chat</span>
+              <span className="text-green-500">v3.0.2 SECURE</span>
             </div>
             
             {/* Message thread */}
