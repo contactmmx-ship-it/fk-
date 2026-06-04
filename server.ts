@@ -40,29 +40,38 @@ const apiRateLimiter = rateLimit({
 });
 app.use("/api/", apiRateLimiter);
 
-// --- STABLE AI ENGINE (MODERN v1 API) ---
+// --- BULLETPROOF SELF-HEALING AI ENGINE ---
 async function callGeminiAI(prompt: string, context: string = "") {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey || apiKey === "MY_GEMINI_API_KEY") {
         throw new Error("Missing GEMINI_API_KEY.");
     }
 
-    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    const configs = [
+        { model: "gemini-1.5-flash", version: "v1beta" },
+        { model: "gemini-pro", version: "v1" }
+    ];
 
-    const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            contents: [{
-                parts: [{ text: `You are the AI Chairman Advisor. Goal: ₹1,100 Crore Plan.\n\nContext:\n${context}\n\nQuery: ${prompt}` }]
-            }]
-        })
-    });
+    let lastError = "";
 
-    const data: any = await response.json();
-    if (data.error) throw new Error(data.error.message);
-    if (!data.candidates || data.candidates.length === 0) return "Analyzing...";
-    return data.candidates[0].content.parts[0].text;
+    for (const config of configs) {
+        try {
+            const url = `https://generativelanguage.googleapis.com/${config.version}/models/${config.model}:generateContent?key=${apiKey}`;
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: `You are the AI Chairman Advisor. Goal: ₹1,100 Crore Plan.\n\nContext:\n${context}\n\nQuery: ${prompt}` }] }]
+                })
+            });
+            const data: any = await response.json();
+            if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
+                return data.candidates[0].content.parts[0].text;
+            }
+            if (data.error) lastError = data.error.message;
+        } catch (err: any) { lastError = err.message; }
+    }
+    throw new Error(lastError || "AI connection failed");
 }
 
 runMigrations();
@@ -110,7 +119,7 @@ app.post("/api/chat", requireAuth, async (req: AuthenticatedRequest, res) => {
     const aiMsgId = "msg-ai-" + Date.now();
 
     await dbWriteOperation(userId, async (client, fallbackState) => {
-      if (client) await client.query("INSERT INTO messages (id, user_id, sender, text, timestamp) VALUES ($1, $2, $3, $4)", [aiMsgId, userId, "ai", answerText]);
+      if (client) await client.query("INSERT INTO messages (id, user_id, sender, text) VALUES ($1, $2, $3, $4)", [aiMsgId, userId, "ai", answerText]);
       else fallbackState.messages.push({ id: aiMsgId, sender: "ai", text: answerText, timestamp: new Date().toISOString() });
     });
 

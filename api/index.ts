@@ -25,37 +25,49 @@ app.set("trust proxy", 1);
 
 const cloudMemory: any = {};
 
-// --- FINAL STABLE AI ENGINE (MODERN v1 API) ---
+// --- BULLETPROOF SELF-HEALING AI ENGINE ---
 async function callGeminiAI(prompt: string) {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey || apiKey === "MY_GEMINI_API_KEY") {
-        throw new Error("API Key missing. Please set GEMINI_API_KEY in Vercel environment variables.");
+        throw new Error("API Key missing. Please set GEMINI_API_KEY in Vercel.");
     }
 
-    // Using the absolute latest stable model name: gemini-1.5-flash
-    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    // List of configurations to try in order of reliability
+    const configs = [
+        { model: "gemini-1.5-flash", version: "v1beta" },
+        { model: "gemini-1.5-pro", version: "v1beta" },
+        { model: "gemini-pro", version: "v1" }
+    ];
 
-    const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            contents: [{
-                parts: [{ text: `You are the FK Chairman Strategic Partner. High-level corporate strategy only. Goal: 1100Cr Plan. Chairman says: ${prompt}` }]
-            }]
-        })
-    });
+    let lastError = "";
 
-    const data: any = await response.json();
+    for (const config of configs) {
+        try {
+            const url = `https://generativelanguage.googleapis.com/${config.version}/models/${config.model}:generateContent?key=${apiKey}`;
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: `You are the FK Chairman Strategic Partner. High-level corporate strategy only. Goal: 1100Cr Plan. Chairman says: ${prompt}` }] }]
+                })
+            });
 
-    if (data.error) {
-        throw new Error(`Google API Error: ${data.error.message} (Code: ${data.error.code})`);
+            const data: any = await response.json();
+
+            if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
+                return data.candidates[0].content.parts[0].text;
+            }
+
+            if (data.error) {
+                lastError = data.error.message;
+                continue; // Try next config
+            }
+        } catch (err: any) {
+            lastError = err.message;
+        }
     }
 
-    if (!data.candidates || data.candidates.length === 0) {
-        return "The AI engine is processing. Please try a different strategy question.";
-    }
-
-    return data.candidates[0].content.parts[0].text;
+    throw new Error(`AI Engine failed all connection paths. Last error: ${lastError}`);
 }
 
 // Auth Middleware
@@ -79,29 +91,18 @@ app.post("/api/auth/login", async (req, res) => {
     const { email, password } = req.body;
     const user = await findUserByEmail(email);
     if (!user || !(await bcrypt.compare(password, user.password_hash))) {
-      return res.status(401).json({ error: "Invalid email or password" });
+      return res.status(401).json({ error: "Invalid credentials" });
     }
     const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: "24h" });
-    res.cookie("token", token, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "none",
-        maxAge: 24 * 60 * 60 * 1000
-    });
+    res.cookie("token", token, { httpOnly: true, secure: true, sameSite: "none", maxAge: 24 * 60 * 60 * 1000 });
     res.json({ status: "success", user: { id: user.id, email: user.email, role: user.role } });
-  } catch (err) {
-    res.status(500).json({ error: "Login failed" });
-  }
+  } catch (err) { res.status(500).json({ error: "Login failed" }); }
 });
 
 app.get("/api/auth/me", requireAuth, (req: AuthenticatedRequest, res) => res.json({ user: req.user }));
 
 app.get("/api/debug/ai", (req, res) => {
-  res.json({
-    active: true,
-    key_detected: !!process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== "MY_GEMINI_API_KEY",
-    engine: "REST_V1_FLASH"
-  });
+  res.json({ active: true, key_detected: !!process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== "MY_GEMINI_API_KEY", engine: "SELF_HEALING_V4" });
 });
 
 app.get("/api/db", requireAuth, async (req: AuthenticatedRequest, res) => {
@@ -125,7 +126,6 @@ app.post("/api/chat", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
         answerText = await callGeminiAI(prompt);
     } catch (err: any) {
-        console.error("AI Error:", err);
         answerText = `Operational Alert: ${err.message}`;
     }
 
