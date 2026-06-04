@@ -18,11 +18,6 @@ import {
   createUserInDB
 } from "./server/db.js";
 
-import {
-  LoginSchema,
-  ChatSchema
-} from "./server/validation.js";
-
 dotenv.config();
 
 const app = express();
@@ -45,14 +40,14 @@ const apiRateLimiter = rateLimit({
 });
 app.use("/api/", apiRateLimiter);
 
-// --- ROBUST AI ENGINE (DIRECT REST LINK) ---
+// --- STABLE AI ENGINE (MODERN v1 API) ---
 async function callGeminiAI(prompt: string, context: string = "") {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey || apiKey === "MY_GEMINI_API_KEY") {
         throw new Error("Missing GEMINI_API_KEY.");
     }
 
-    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${apiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
     const response = await fetch(url, {
         method: 'POST',
@@ -66,6 +61,7 @@ async function callGeminiAI(prompt: string, context: string = "") {
 
     const data: any = await response.json();
     if (data.error) throw new Error(data.error.message);
+    if (!data.candidates || data.candidates.length === 0) return "Analyzing...";
     return data.candidates[0].content.parts[0].text;
 }
 
@@ -114,7 +110,7 @@ app.post("/api/chat", requireAuth, async (req: AuthenticatedRequest, res) => {
     const aiMsgId = "msg-ai-" + Date.now();
 
     await dbWriteOperation(userId, async (client, fallbackState) => {
-      if (client) await client.query("INSERT INTO messages (id, user_id, sender, text) VALUES ($1, $2, $3, $4)", [aiMsgId, userId, "ai", answerText]);
+      if (client) await client.query("INSERT INTO messages (id, user_id, sender, text, timestamp) VALUES ($1, $2, $3, $4)", [aiMsgId, userId, "ai", answerText]);
       else fallbackState.messages.push({ id: aiMsgId, sender: "ai", text: answerText, timestamp: new Date().toISOString() });
     });
 

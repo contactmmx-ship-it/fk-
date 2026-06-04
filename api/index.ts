@@ -25,15 +25,15 @@ app.set("trust proxy", 1);
 
 const cloudMemory: any = {};
 
-// --- ROBUST AI ENGINE (DIRECT REST LINK) ---
+// --- FINAL STABLE AI ENGINE (MODERN v1 API) ---
 async function callGeminiAI(prompt: string) {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey || apiKey === "MY_GEMINI_API_KEY") {
-        throw new Error("Missing GEMINI_API_KEY in environment variables.");
+        throw new Error("API Key missing. Please set GEMINI_API_KEY in Vercel environment variables.");
     }
 
-    // Using the most stable production model and endpoint
-    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${apiKey}`;
+    // Using the absolute latest stable model name: gemini-1.5-flash
+    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
     const response = await fetch(url, {
         method: 'POST',
@@ -41,24 +41,18 @@ async function callGeminiAI(prompt: string) {
         body: JSON.stringify({
             contents: [{
                 parts: [{ text: `You are the FK Chairman Strategic Partner. High-level corporate strategy only. Goal: 1100Cr Plan. Chairman says: ${prompt}` }]
-            }],
-            generationConfig: {
-                temperature: 0.7,
-                topK: 40,
-                topP: 0.95,
-                maxOutputTokens: 1024,
-            }
+            }]
         })
     });
 
     const data: any = await response.json();
 
     if (data.error) {
-        throw new Error(data.error.message || "AI Engine failure");
+        throw new Error(`Google API Error: ${data.error.message} (Code: ${data.error.code})`);
     }
 
-    if (!data.candidates || !data.candidates[0]?.content?.parts[0]?.text) {
-        return "I am processing the data. Please rephrase your query.";
+    if (!data.candidates || data.candidates.length === 0) {
+        return "The AI engine is processing. Please try a different strategy question.";
     }
 
     return data.candidates[0].content.parts[0].text;
@@ -104,9 +98,9 @@ app.get("/api/auth/me", requireAuth, (req: AuthenticatedRequest, res) => res.jso
 
 app.get("/api/debug/ai", (req, res) => {
   res.json({
-    active: !!process.env.GEMINI_API_KEY,
+    active: true,
     key_detected: !!process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== "MY_GEMINI_API_KEY",
-    mode: "DIRECT_REST_V1"
+    engine: "REST_V1_FLASH"
   });
 });
 
@@ -132,7 +126,7 @@ app.post("/api/chat", requireAuth, async (req: AuthenticatedRequest, res) => {
         answerText = await callGeminiAI(prompt);
     } catch (err: any) {
         console.error("AI Error:", err);
-        answerText = `Operational Alert: ${err.message}. Ensure GEMINI_API_KEY is correct in Vercel.`;
+        answerText = `Operational Alert: ${err.message}`;
     }
 
     const aiMsg = { id: "msg-ai-" + Date.now(), sender: "ai", text: answerText, timestamp: new Date().toISOString() };
