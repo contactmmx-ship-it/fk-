@@ -8,8 +8,7 @@ import dotenv from "dotenv";
 
 import {
   getCombinedDatabaseState,
-  findUserByEmail,
-  dbWriteOperation
+  findUserByEmail
 } from "../server/db.js";
 
 dotenv.config();
@@ -25,30 +24,34 @@ app.set("trust proxy", 1);
 
 const cloudMemory: any = {};
 
-// --- BULLETPROOF SELF-HEALING AI ENGINE ---
+// --- DEFINITIVE ADAPTIVE AI ENGINE ---
 async function callGeminiAI(prompt: string) {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey || apiKey === "MY_GEMINI_API_KEY") {
-        throw new Error("API Key missing. Please set GEMINI_API_KEY in Vercel.");
+    const rawKey = process.env.GEMINI_API_KEY;
+    if (!rawKey || rawKey === "MY_GEMINI_API_KEY") {
+        throw new Error("GEMINI_API_KEY is missing in Vercel Environment Variables.");
     }
 
-    // List of configurations to try in order of reliability
-    const configs = [
-        { model: "gemini-1.5-flash", version: "v1beta" },
-        { model: "gemini-1.5-pro", version: "v1beta" },
-        { model: "gemini-pro", version: "v1" }
+    const apiKey = rawKey.trim(); // Remove any accidental spaces
+
+    // Try multiple paths: Stable Production first, then Beta
+    const attempts = [
+        { url: "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent" },
+        { url: "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent" },
+        { url: "https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent" }
     ];
 
     let lastError = "";
 
-    for (const config of configs) {
+    for (const attempt of attempts) {
         try {
-            const url = `https://generativelanguage.googleapis.com/${config.version}/models/${config.model}:generateContent?key=${apiKey}`;
-            const response = await fetch(url, {
+            const response = await fetch(attempt.url, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-goog-api-key': apiKey
+                },
                 body: JSON.stringify({
-                    contents: [{ parts: [{ text: `You are the FK Chairman Strategic Partner. High-level corporate strategy only. Goal: 1100Cr Plan. Chairman says: ${prompt}` }] }]
+                    contents: [{ parts: [{ text: `You are the FK Chairman Strategic Partner. Goal: 1100Cr Plan. Chairman says: ${prompt}` }] }]
                 })
             });
 
@@ -59,15 +62,15 @@ async function callGeminiAI(prompt: string) {
             }
 
             if (data.error) {
-                lastError = data.error.message;
-                continue; // Try next config
+                lastError = `${data.error.message} (${attempt.url})`;
+                continue;
             }
         } catch (err: any) {
             lastError = err.message;
         }
     }
 
-    throw new Error(`AI Engine failed all connection paths. Last error: ${lastError}`);
+    throw new Error(`AI Engine failed all paths. Last error: ${lastError}`);
 }
 
 // Auth Middleware
@@ -94,7 +97,12 @@ app.post("/api/auth/login", async (req, res) => {
       return res.status(401).json({ error: "Invalid credentials" });
     }
     const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: "24h" });
-    res.cookie("token", token, { httpOnly: true, secure: true, sameSite: "none", maxAge: 24 * 60 * 60 * 1000 });
+    res.cookie("token", token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "none",
+        maxAge: 24 * 60 * 60 * 1000
+    });
     res.json({ status: "success", user: { id: user.id, email: user.email, role: user.role } });
   } catch (err) { res.status(500).json({ error: "Login failed" }); }
 });
@@ -102,7 +110,11 @@ app.post("/api/auth/login", async (req, res) => {
 app.get("/api/auth/me", requireAuth, (req: AuthenticatedRequest, res) => res.json({ user: req.user }));
 
 app.get("/api/debug/ai", (req, res) => {
-  res.json({ active: true, key_detected: !!process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== "MY_GEMINI_API_KEY", engine: "SELF_HEALING_V4" });
+  res.json({
+    active: true,
+    key_detected: !!process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== "MY_GEMINI_API_KEY",
+    version: "4.1.0"
+  });
 });
 
 app.get("/api/db", requireAuth, async (req: AuthenticatedRequest, res) => {
