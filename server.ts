@@ -8,34 +8,18 @@ import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import { createServer as createViteServer } from "vite";
-import { GoogleGenAI, Type } from "@google/genai";
 import dotenv from "dotenv";
 
 import {
   runMigrations,
   getCombinedDatabaseState,
   dbWriteOperation,
-  logAuditEvent,
   findUserByEmail,
-  createUserInDB,
-  seedUserDatabase,
-  pool,
-  isPostgresActive
+  createUserInDB
 } from "./server/db.js";
 
 import {
-  RegisterSchema,
   LoginSchema,
-  WeeklyBoardItemSchema,
-  ActionPlanItemSchema,
-  EmergencyModeSchema,
-  AccountabilityCommitmentSchema,
-  DecisionLogSchema,
-  InvestorSchema,
-  BrandSchema,
-  ReadinessScanSchema,
-  KnowledgeDocSchema,
-  WarRoomSessionSchema,
   ChatSchema
 } from "./server/validation.js";
 
@@ -45,21 +29,8 @@ const app = express();
 const PORT = 3000;
 const JWT_SECRET = process.env.JWT_SECRET || "fk_group_secret_session_layer_2026";
 
-// --- SECURITY & PLATFORM ENHANCEMENTS ---
-app.use(
-  helmet({
-    contentSecurityPolicy: false,
-    crossOriginEmbedderPolicy: false,
-  })
-);
-
-app.use(
-  cors({
-    origin: true,
-    credentials: true,
-  })
-);
-
+app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }));
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 app.use(cookieParser());
 app.set("trust proxy", 1);
@@ -67,154 +38,88 @@ app.set("trust proxy", 1);
 const apiRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 500,
-  message: { error: "Too many requests from this IP" },
+  message: { error: "Too many requests" },
   standardHeaders: true,
   legacyHeaders: false,
   validate: false,
 });
 app.use("/api/", apiRateLimiter);
 
-// --- GOOGLE GEMINI AI CONFIGURATION ---
-let ai: any = null;
-try {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (apiKey && apiKey !== "MY_GEMINI_API_KEY") {
-    ai = new GoogleGenAI({
-      apiKey,
-      httpOptions: {
-        headers: {
-          "User-Agent": "aistudio-build",
-        },
-      },
+// --- ROBUST AI ENGINE (DIRECT REST LINK) ---
+async function callGeminiAI(prompt: string, context: string = "") {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey || apiKey === "MY_GEMINI_API_KEY") {
+        throw new Error("Missing GEMINI_API_KEY.");
+    }
+
+    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${apiKey}`;
+
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            contents: [{
+                parts: [{ text: `You are the AI Chairman Advisor. Goal: ₹1,100 Crore Plan.\n\nContext:\n${context}\n\nQuery: ${prompt}` }]
+            }]
+        })
     });
-    console.log("Strategic Gemini Advisor initialized successfully.");
-  } else {
-    console.warn("GEMINI_API_KEY is missing. Operating on offline heuristics.");
-  }
-} catch (err) {
-  console.error("Failed to initialize Gemini:", err);
+
+    const data: any = await response.json();
+    if (data.error) throw new Error(data.error.message);
+    return data.candidates[0].content.parts[0].text;
 }
 
 runMigrations();
 
-// --- AUTHENTICATION & ROLE MANAGEMENT ---
 interface AuthenticatedRequest extends express.Request {
-  user?: {
-    id: number;
-    email: string;
-    role: "Chairman" | "Admin" | "Partner" | "Viewer";
-  };
+  user?: { id: number; email: string; role: string };
 }
 
-const requireAuth = async (
-  req: AuthenticatedRequest,
-  res: express.Response,
-  next: express.NextFunction
-) => {
+const requireAuth = async (req: AuthenticatedRequest, res: express.Response, next: express.NextFunction) => {
   try {
     const token = req.cookies.token;
-    if (!token) {
-      res.status(401).json({ error: "Authentication failed. No token provided." });
-      return;
-    }
-    const decoded = jwt.verify(token, JWT_SECRET) as any;
-    req.user = decoded;
+    if (!token) return res.status(401).json({ error: "Unauthorized" });
+    req.user = jwt.verify(token, JWT_SECRET) as any;
     next();
-  } catch (error) {
-    res.status(401).json({ error: "Authentication failed. Stale or invalid session." });
-  }
+  } catch (error) { res.status(401).json({ error: "Invalid session" }); }
 };
 
-// --- REST ENDPOINTS ---
-
-app.post("/api/auth/login", async (req, res, next) => {
+app.post("/api/auth/login", async (req, res) => {
   try {
-    const parseResult = LoginSchema.safeParse(req.body);
-    if (!parseResult.success) {
-      res.status(400).json({ error: parseResult.error.issues[0].message });
-      return;
-    }
-    const { email, password } = parseResult.data;
+    const { email, password } = req.body;
     const user = await findUserByEmail(email);
-    if (!user || !(await bcrypt.compare(password, user.password_hash))) {
-      res.status(401).json({ error: "Invalid email or credentials." });
-      return;
-    }
+    if (!user || !(await bcrypt.compare(password, user.password_hash))) return res.status(401).json({ error: "Invalid credentials" });
     const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: "24h" });
-    res.cookie("token", token, { httpOnly: true, secure: false, sameSite: "lax", maxAge: 24 * 60 * 60 * 1000 });
+    res.cookie("token", token, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 });
     res.json({ status: "success", user: { id: user.id, email: user.email, role: user.role } });
-  } catch (error) { next(error); }
+  } catch (error) { res.status(500).json({ error: "Login error" }); }
 });
-
-app.get("/api/auth/me", requireAuth, (req: AuthenticatedRequest, res) => res.json({ user: req.user }));
 
 app.get("/api/debug/ai", (req, res) => {
-  res.json({
-    active: !!ai,
-    key_detected: !!process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== "MY_GEMINI_API_KEY",
-    env: process.env.NODE_ENV
-  });
+    res.json({ active: true, key_detected: !!process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== "MY_GEMINI_API_KEY" });
 });
 
-app.get("/api/db", requireAuth, async (req: AuthenticatedRequest, res, next) => {
-  try {
-    res.json(await getCombinedDatabaseState(req.user!.id));
-  } catch (error) { next(error); }
+app.get("/api/db", requireAuth, async (req: AuthenticatedRequest, res) => {
+  res.json(await getCombinedDatabaseState(req.user!.id));
 });
 
-// 1. AI CHAIRMAN ADVISOR (Chat system)
-app.post("/api/chat", requireAuth, async (req: AuthenticatedRequest, res, next) => {
+app.post("/api/chat", requireAuth, async (req: AuthenticatedRequest, res) => {
   try {
     const { prompt } = req.body;
     const userId = req.user!.id;
     const dbState = await getCombinedDatabaseState(userId);
+    const context = dbState.knowledgeDocs.map((kd: any) => `[${kd.title}]: ${kd.content}`).join("\n");
 
-    let answerText = "AI is currently offline. Please ensure your GEMINI_API_KEY is configured in the .env file.";
-
-    if (ai) {
-      try {
-        const docContext = dbState.knowledgeDocs
-          .map((kd: any) => `[${kd.title}] (${kd.category}): ${kd.content}`)
-          .join("\n\n");
-
-        const promptContext = `
-          You are the "AI Chairman Advisor" of FK Holdings. You are the continuous business companion to the Chairman on a strict path to complete the ₹1,100 Crore ecosystem plan.
-
-          Context:
-          ${docContext}
-
-          Metrics:
-          - Overall Score: ${dbState.partnerScore.overallScore}/100
-          - MRR: ₹${(dbState.partnerScore.metrics.revenueMRR / 100000.0).toFixed(1)}L
-          - Cash Runway: ${dbState.partnerScore.metrics.cashRunwayMonths} months
-
-          Chairman Query: "${prompt}"
-        `;
-
-        const responseObj = await ai.models.generateContent({
-          model: "gemini-1.5-flash",
-          contents: promptContext,
-        });
-
-        answerText = responseObj.text || "I am analyzing the data. Please rephrase.";
-      } catch (err: any) {
-        console.error("Gemini failed in chat route:", err);
-        answerText = `Operational Alert: ${err.message || "Connection timeout"}.`;
-      }
-    }
-
+    const answerText = await callGeminiAI(prompt, context);
     const aiMsgId = "msg-ai-" + Date.now();
+
     await dbWriteOperation(userId, async (client, fallbackState) => {
-      const msg = { id: aiMsgId, sender: "ai", text: answerText, timestamp: new Date().toISOString() };
-      if (client) {
-        await client.query("INSERT INTO messages (id, user_id, sender, text, timestamp) VALUES ($1, $2, $3, $4, NOW())", [aiMsgId, userId, "ai", answerText]);
-      } else {
-        fallbackState.messages.push(msg);
-      }
+      if (client) await client.query("INSERT INTO messages (id, user_id, sender, text) VALUES ($1, $2, $3, $4)", [aiMsgId, userId, "ai", answerText]);
+      else fallbackState.messages.push({ id: aiMsgId, sender: "ai", text: answerText, timestamp: new Date().toISOString() });
     });
 
     res.json({ aiMessage: { id: aiMsgId, sender: "ai", text: answerText, timestamp: new Date().toISOString() } });
-  } catch (error) { next(error); }
+  } catch (error: any) { res.status(500).json({ error: error.message }); }
 });
 
 // Static serving

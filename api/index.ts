@@ -1,17 +1,15 @@
 import express from "express";
-import path from "path";
-import fs from "fs";
 import cookieParser from "cookie-parser";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import cors from "cors";
 import helmet from "helmet";
-import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 
 import {
   getCombinedDatabaseState,
   findUserByEmail,
+  dbWriteOperation
 } from "../server/db.js";
 
 dotenv.config();
@@ -27,21 +25,43 @@ app.set("trust proxy", 1);
 
 const cloudMemory: any = {};
 
-let ai: any = null;
-try {
+// --- ROBUST AI ENGINE (DIRECT REST LINK) ---
+async function callGeminiAI(prompt: string) {
     const apiKey = process.env.GEMINI_API_KEY;
-    if (apiKey && apiKey !== "MY_GEMINI_API_KEY") {
-        ai = new GoogleGenAI({
-            apiKey,
-            httpOptions: {
-                headers: {
-                    "User-Agent": "aistudio-build",
-                },
-            },
-        });
+    if (!apiKey || apiKey === "MY_GEMINI_API_KEY") {
+        throw new Error("Missing GEMINI_API_KEY in environment variables.");
     }
-} catch (err) {
-    console.error("AI Init failed:", err);
+
+    // Using the most stable production model and endpoint
+    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${apiKey}`;
+
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            contents: [{
+                parts: [{ text: `You are the FK Chairman Strategic Partner. High-level corporate strategy only. Goal: 1100Cr Plan. Chairman says: ${prompt}` }]
+            }],
+            generationConfig: {
+                temperature: 0.7,
+                topK: 40,
+                topP: 0.95,
+                maxOutputTokens: 1024,
+            }
+        })
+    });
+
+    const data: any = await response.json();
+
+    if (data.error) {
+        throw new Error(data.error.message || "AI Engine failure");
+    }
+
+    if (!data.candidates || !data.candidates[0]?.content?.parts[0]?.text) {
+        return "I am processing the data. Please rephrase your query.";
+    }
+
+    return data.candidates[0].content.parts[0].text;
 }
 
 // Auth Middleware
@@ -84,8 +104,9 @@ app.get("/api/auth/me", requireAuth, (req: AuthenticatedRequest, res) => res.jso
 
 app.get("/api/debug/ai", (req, res) => {
   res.json({
-    active: !!ai,
-    key_detected: !!process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== "MY_GEMINI_API_KEY"
+    active: !!process.env.GEMINI_API_KEY,
+    key_detected: !!process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== "MY_GEMINI_API_KEY",
+    mode: "DIRECT_REST_V1"
   });
 });
 
@@ -106,21 +127,12 @@ app.post("/api/chat", requireAuth, async (req: AuthenticatedRequest, res) => {
     if (!cloudMemory[userId]) cloudMemory[userId] = [];
     cloudMemory[userId].push(userMsg);
 
-    let answerText = "AI Engine Offline. Verify GEMINI_API_KEY in Vercel settings.";
-
-    if (ai) {
-        try {
-            // Corrected syntax for the @google/genai library
-            const responseObj = await ai.models.generateContent({
-                model: "gemini-1.5-flash",
-                contents: `You are the FK Chairman Partner. High-level strategy only. Target 1100Cr. Chairman says: ${prompt}`
-            });
-
-            answerText = responseObj.text || "I am analyzing the data. Please rephrase.";
-        } catch (err: any) {
-            console.error("Gemini call failed:", err);
-            answerText = `Operational Alert: ${err.message || "Execution error"}.`;
-        }
+    let answerText = "";
+    try {
+        answerText = await callGeminiAI(prompt);
+    } catch (err: any) {
+        console.error("AI Error:", err);
+        answerText = `Operational Alert: ${err.message}. Ensure GEMINI_API_KEY is correct in Vercel.`;
     }
 
     const aiMsg = { id: "msg-ai-" + Date.now(), sender: "ai", text: answerText, timestamp: new Date().toISOString() };
