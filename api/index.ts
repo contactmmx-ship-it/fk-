@@ -27,11 +27,18 @@ app.set("trust proxy", 1);
 
 const cloudMemory: any = {};
 
-let ai: GoogleGenAI | null = null;
+let ai: any = null;
 try {
     const apiKey = process.env.GEMINI_API_KEY;
     if (apiKey && apiKey !== "MY_GEMINI_API_KEY") {
-        ai = new GoogleGenAI(apiKey);
+        ai = new GoogleGenAI({
+            apiKey,
+            httpOptions: {
+                headers: {
+                    "User-Agent": "aistudio-build",
+                },
+            },
+        });
     }
 } catch (err) {
     console.error("AI Init failed:", err);
@@ -75,6 +82,13 @@ app.post("/api/auth/login", async (req, res) => {
 
 app.get("/api/auth/me", requireAuth, (req: AuthenticatedRequest, res) => res.json({ user: req.user }));
 
+app.get("/api/debug/ai", (req, res) => {
+  res.json({
+    active: !!ai,
+    key_detected: !!process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== "MY_GEMINI_API_KEY"
+  });
+});
+
 app.get("/api/db", requireAuth, async (req: AuthenticatedRequest, res) => {
   const userId = req.user!.id;
   const data = await getCombinedDatabaseState(userId);
@@ -92,18 +106,20 @@ app.post("/api/chat", requireAuth, async (req: AuthenticatedRequest, res) => {
     if (!cloudMemory[userId]) cloudMemory[userId] = [];
     cloudMemory[userId].push(userMsg);
 
-    // UNIQUE VERIFICATION STRING TO DETECT DEPLOYMENT SUCCESS
-    let answerText = "[VERIFIED V3] AI Engine Offline. Add your GEMINI_API_KEY to Vercel Environment Variables.";
+    let answerText = "AI Engine Offline. Verify GEMINI_API_KEY in Vercel settings.";
 
     if (ai) {
         try {
-            const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
-            const result = await model.generateContent(`You are the FK Chairman Partner. High-level strategy only. Target 1100Cr. Chairman says: ${prompt}`);
-            const response = await result.response;
-            answerText = response.text() || "I am analyzing the data. Please rephrase.";
+            // Corrected syntax for the @google/genai library
+            const responseObj = await ai.models.generateContent({
+                model: "gemini-1.5-flash",
+                contents: `You are the FK Chairman Partner. High-level strategy only. Target 1100Cr. Chairman says: ${prompt}`
+            });
+
+            answerText = responseObj.text || "I am analyzing the data. Please rephrase.";
         } catch (err: any) {
             console.error("Gemini call failed:", err);
-            answerText = `[VERIFIED V3] Operational Alert: ${err.message || "Connection error"}. Verify API key and network.`;
+            answerText = `Operational Alert: ${err.message || "Execution error"}.`;
         }
     }
 

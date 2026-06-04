@@ -75,7 +75,7 @@ const apiRateLimiter = rateLimit({
 app.use("/api/", apiRateLimiter);
 
 // --- GOOGLE GEMINI AI CONFIGURATION ---
-let ai: GoogleGenAI | null = null;
+let ai: any = null;
 try {
   const apiKey = process.env.GEMINI_API_KEY;
   if (apiKey && apiKey !== "MY_GEMINI_API_KEY") {
@@ -178,19 +178,17 @@ app.post("/api/chat", requireAuth, async (req: AuthenticatedRequest, res, next) 
           .join("\n\n");
 
         const promptContext = `
-          You are the "AI Chairman Advisor" of FK Holdings. You are the continuous business companion to the Chairman on a strict path to the ₹1,100 Crore ecosystem plan.
+          You are the "AI Chairman Advisor" of FK Holdings. You are the continuous business companion to the Chairman on a strict path to complete the ₹1,100 Crore ecosystem plan.
 
-          Knowledge Context:
+          Context:
           ${docContext}
 
-          Current Metrics:
+          Metrics:
           - Overall Score: ${dbState.partnerScore.overallScore}/100
           - MRR: ₹${(dbState.partnerScore.metrics.revenueMRR / 100000.0).toFixed(1)}L
           - Cash Runway: ${dbState.partnerScore.metrics.cashRunwayMonths} months
 
-          Chairman's Query: "${prompt}"
-
-          Provide a highly strategic, professional, and direct response. Use bold points.
+          Chairman Query: "${prompt}"
         `;
 
         const responseObj = await ai.models.generateContent({
@@ -198,10 +196,10 @@ app.post("/api/chat", requireAuth, async (req: AuthenticatedRequest, res, next) 
           contents: promptContext,
         });
 
-        answerText = responseObj.text || "I was unable to structure a strategic output. Please re-engage.";
+        answerText = responseObj.text || "I am analyzing the data. Please rephrase.";
       } catch (err: any) {
         console.error("Gemini failed in chat route:", err);
-        answerText = `Operational Alert: ${err.message || "Execution error"}. Please check API key and network connection.`;
+        answerText = `Operational Alert: ${err.message || "Connection timeout"}.`;
       }
     }
 
