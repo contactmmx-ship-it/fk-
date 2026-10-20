@@ -17,12 +17,13 @@ import {
   findUserByEmail,
   createUserInDB
 } from "./server/db.js";
+import { getJwtSecret } from "./server/jwt-secret.js";
 
 dotenv.config();
 
 const app = express();
 const PORT = 3000;
-const JWT_SECRET = process.env.JWT_SECRET || "fk_group_secret_session_layer_2026";
+
 
 app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }));
 app.use(cors({ origin: true, credentials: true }));
@@ -81,20 +82,24 @@ interface AuthenticatedRequest extends express.Request {
 }
 
 const requireAuth = async (req: AuthenticatedRequest, res: express.Response, next: express.NextFunction) => {
+  const jwtSecret = getJwtSecret();
+  if (!jwtSecret) return res.status(503).json({ error: "Authentication unavailable" });
   try {
     const token = req.cookies.token;
     if (!token) return res.status(401).json({ error: "Unauthorized" });
-    req.user = jwt.verify(token, JWT_SECRET) as any;
+    req.user = jwt.verify(token, jwtSecret) as any;
     next();
   } catch (error) { res.status(401).json({ error: "Invalid session" }); }
 };
 
 app.post("/api/auth/login", async (req, res) => {
   try {
+    const jwtSecret = getJwtSecret();
+    if (!jwtSecret) return res.status(503).json({ error: "Authentication unavailable" });
     const { email, password } = req.body;
     const user = await findUserByEmail(email);
     if (!user || !(await bcrypt.compare(password, user.password_hash))) return res.status(401).json({ error: "Invalid credentials" });
-    const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: "24h" });
+    const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, jwtSecret, { expiresIn: "24h" });
     res.cookie("token", token, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 });
     res.json({ status: "success", user: { id: user.id, email: user.email, role: user.role } });
   } catch (error) { res.status(500).json({ error: "Login error" }); }
